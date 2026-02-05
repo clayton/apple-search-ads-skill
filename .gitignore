@@ -1,0 +1,31 @@
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Private keys
+*.pem
+*.p8
+*.key
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test output
+test-output/
+*.test.log
