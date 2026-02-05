@@ -17,7 +17,7 @@ A pure bash/shell skill for managing Apple Search Ads campaigns directly from Cl
 Copy to your Claude Code skills directory:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/apple-search-ads-skill.git ~/.claude/skills/apple-ads
+git clone https://github.com/clayton/apple-search-ads-skill.git ~/.claude/skills/apple-ads
 ```
 
 ### 2. Configure
