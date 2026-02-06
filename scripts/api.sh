@@ -61,7 +61,7 @@ api_post() {
         "$BASE_URL$path"
 }
 
-# PATCH request
+# PATCH request (NOTE: PATCH returns 403 for campaign updates - use api_put with nested body instead)
 # Usage: api_patch "/campaigns/123" '{"status":"PAUSED"}'
 api_patch() {
     local path="$1"
@@ -76,8 +76,9 @@ api_patch() {
         "$BASE_URL$path"
 }
 
-# PUT request (for bulk updates)
-# Usage: api_put "/campaigns/123/adgroups/456/targetingkeywords/bulk" '[{"id":789,"bidAmount":{"amount":"2.50","currency":"USD"}}]'
+# PUT request (for campaign/adgroup updates and bulk keyword updates)
+# Campaign updates require nested body: '{"campaign":{"status":"PAUSED"}}'
+# Keyword bulk updates: '[{"id":789,"bidAmount":{"amount":"2.50","currency":"USD"}}]'
 api_put() {
     local path="$1"
     local body="$2"

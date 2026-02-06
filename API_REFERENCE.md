@@ -250,17 +250,21 @@ Request Body:
 
 ### Update Campaign
 
+**IMPORTANT**: Use PUT (not PATCH). PATCH returns 403 Forbidden. Body must be nested under a `"campaign"` key.
+
 ```bash
-PATCH /campaigns/{campaignId}
+PUT /campaigns/{campaignId}
 ```
 
 Request Body:
 ```json
 {
-  "status": "PAUSED",
-  "dailyBudgetAmount": {
-    "amount": "200.00",
-    "currency": "USD"
+  "campaign": {
+    "status": "PAUSED",
+    "dailyBudgetAmount": {
+      "amount": "200.00",
+      "currency": "USD"
+    }
   }
 }
 ```
