@@ -19,17 +19,77 @@ Full read/write access to Apple Search Ads API v5 for campaign analysis and opti
 - Analyzing why campaigns aren't performing
 - Scaling profitable campaigns
 
-## Required Environment Variables
+## Authentication
 
-```bash
-APPLE_ADS_CLIENT_ID=SEARCHADS.xxx-xxx-xxx
-APPLE_ADS_TEAM_ID=SEARCHADS.xxx-xxx-xxx
-APPLE_ADS_KEY_ID=xxx-xxx-xxx
-APPLE_ADS_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
-APPLE_ADS_ORG_ID=12345678
+Apple Search Ads uses OAuth 2.0 with an ES256 JWT client secret. Every API call requires a Bearer token obtained by exchanging the JWT.
+
+### Credentials
+
+You need 4 values (5 env vars, since CLIENT_ID and TEAM_ID are typically the same):
+
+| Credential | Env Var | Vault Key | Format |
+|---|---|---|---|
+| Client ID | `APPLE_ADS_CLIENT_ID` | `apple.ads.client-id` | `SEARCHADS.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
+| Team ID | `APPLE_ADS_TEAM_ID` | *(same as client-id)* | `SEARCHADS.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx` |
+| Key ID | `APPLE_ADS_KEY_ID` | `apple.ads.key-id` | UUID |
+| Private Key | `APPLE_ADS_PRIVATE_KEY` | `apple.ads.private-key` | EC P-256 PEM |
+| Org ID | `APPLE_ADS_ORG_ID` | `apple.ads.org-id` | Numeric |
+
+For env-var mode, set these in `~/.claude/.env`. For vault mode, store them with the vault key names above.
+
+### Step 1: Generate JWT (client_secret)
+
+The JWT must have this exact structure:
+
+**Header:** `{ "alg": "ES256", "kid": "<KEY_ID>" }`
+
+**Claims:**
+- `iss` = Client ID (`SEARCHADS.xxx`) — NOT a separate issuer ID
+- `sub` = Client ID (`SEARCHADS.xxx`) — same value as iss
+- `aud` = `https://appleid.apple.com`
+- `iat` = current unix timestamp
+- `exp` = current unix timestamp + 3600
+
+**Signed with:** the EC P-256 private key
+
+Using the `generate_jwt` tool with vault:
+```
+generate_jwt(
+  algorithm: "ES256",
+  kid: "{{vault:apple.ads.key-id}}",
+  claims: {
+    iss: "{{vault:apple.ads.client-id}}",
+    sub: "{{vault:apple.ads.client-id}}",
+    aud: "https://appleid.apple.com",
+    iat: <current unix timestamp>,
+    exp: <current unix timestamp + 3600>
+  },
+  private_key: "{{vault:apple.ads.private-key}}"
+)
 ```
 
-Set these in your shell environment or `~/.claude/.env`.
+Using bash:
+```bash
+bash ~/.claude/skills/apple-ads/scripts/get-token.sh
+```
+
+### Step 2: Exchange JWT for Access Token
+
+POST to `https://appleid.apple.com/auth/oauth2/token` with:
+- `Content-Type: application/x-www-form-urlencoded`
+- `grant_type=client_credentials`
+- `client_id=<CLIENT_ID>` (the `SEARCHADS.xxx` value)
+- `client_secret=<JWT from step 1>`
+- `scope=searchadsorg`
+
+The response contains `access_token` (valid for 1 hour).
+
+### Step 3: Make API Calls
+
+All API calls to `https://api.searchads.apple.com/api/v5/` require:
+- `Authorization: Bearer <access_token>`
+- `X-AP-Context: orgId=<ORG_ID>`
+- `Content-Type: application/json`
 
 ## Quick Operations
 
